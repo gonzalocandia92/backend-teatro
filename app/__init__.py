@@ -1,6 +1,7 @@
 # app/__init__.py
 import os
 from flask import Flask
+from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from envs.var import DATABASE_URI
@@ -24,37 +25,40 @@ app.config['SECRET_KEY'] = 'tu_clave_secreta_aleatoria'
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 
-from app import routes
-from app.models import User, Role
-
-# Creación de grupos y usuario administración por defecto
-user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 
 def create_default_roles():
     roles = ['administrador', 'usuario']  
     for role_name in roles:
-        role = user_datastore.find_role(role_name)
-        if not role:
-            role = user_datastore.create_role(name=role_name, description=role_name)
+        role = user_datastore.find_or_create_role(name=role_name, description=role_name)
+        if role:
+            print(f"Role {role_name} creado correctamente.")
+        else:
+            print(f"Error al crear el rol {role_name}.")
     db.session.commit()
 
 def create_default_user():
     admin_user = user_datastore.find_user(email='admin@example.com')
     if not admin_user:
         admin_user = user_datastore.create_user(email='admin@example.com', password='password')
-        user_datastore.add_role_to_user(admin_user, 'administrador')
+        for role_name in ['administrador', 'usuario']:
+            role = user_datastore.find_role(role_name)
+            user_datastore.add_role_to_user(admin_user, role)  
     db.session.commit()
 
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        create_default_roles()
-        create_default_user()
+
+from app import routes
+from app.models import User, Role        
         
+def get_user(user_id):
+    return User.query.get(int(user_id))
         
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
-security = Security(app, user_datastore)
+user_datastore.get_user = get_user 
+security = Security(app, user_datastore, user_model=User)
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):
     db.session.remove()
+    
+
+migrate = Migrate(app, db)

@@ -1,12 +1,13 @@
-from flask import jsonify, request
+from app.models import Funcion, Grupo, Productor, User, Role
 from app import app, db
-from app.models import Funcion, Grupo, Productor
-from flask_security import login_required, roles_required
 from app.schemas import (
     funcion_schema,funciones_schema,
     grupo_schema, grupos_schema,
     productor_schema, productores_schema,
     )
+from flask import Response, jsonify, request, redirect, url_for
+from flask_security import login_user, logout_user, current_user, roles_required, login_required
+from werkzeug.security import generate_password_hash, check_password_hash
 
 @app.route('/', methods=['GET'])
 def index():
@@ -182,3 +183,63 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=True)
+
+# =============================================== Login =================================
+
+# Ruta de registro
+@app.route('/register', methods=['POST'])
+def register():
+    from app import user_datastore
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+
+    # Verifica si el usuario ya existe por dirección de correo electrónico
+    existing_user = user_datastore.find_user(email=email)
+    if existing_user:
+        return jsonify({'message': 'El usuario ya existe'}), 400
+
+    # Crea el nuevo usuario
+    new_user = user_datastore.create_user(email=email, password=generate_password_hash(password))
+    user_datastore.add_role_to_user(new_user, 'usuario')
+    db.session.commit()
+
+    # Llama a la función get_user para obtener el usuario recién creado por su ID
+    user = user_datastore.get_user(new_user.id)
+
+    login_user(user)  # Opcional: Inicia sesión automáticamente después del registro
+
+    response = Response(jsonify({'message': 'Registro exitoso'}), 201)
+    response.headers['Content-Type'] = 'application/json; charset=utf-8'
+
+    return response
+
+
+# Ruta de login
+@app.route('/login', methods=['POST'])
+def login():
+    from app import user_datastore
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+
+    # Obtén el usuario por dirección de correo electrónico
+    user = user_datastore.find_user(email=email)
+
+    if user and check_password_hash(user.password, password):
+        # Llamada a la función get_user para obtener el usuario por su ID
+        user = user_datastore.get_user(user.id)
+        login_user(user)
+        return jsonify({'message': 'Inicio de sesión exitoso'}), 200
+    else:
+        return jsonify({'message': 'Credenciales incorrectas'}), 401
+
+# Ruta de logout
+@app.route('/logout', methods=['POST'])
+@login_required 
+def logout():
+    if current_user.is_authenticated:
+        logout_user()
+        return jsonify({'message': 'Cierre de sesión exitoso'}), 200
+    else:
+        return jsonify({'message': 'No hay usuario autenticado'}), 401
