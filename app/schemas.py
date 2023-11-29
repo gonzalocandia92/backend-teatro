@@ -1,6 +1,6 @@
 from marshmallow import fields
 from app import ma
-from app.models import Grupo, Productor, Funcion
+from app.models import Grupo, Productor, Funcion, User
 
 class GrupoSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -22,6 +22,13 @@ class FuncionSchema(ma.SQLAlchemyAutoSchema):
     imagen = ma.auto_field()
     grupo = ma.Nested(GrupoSchema)
     productor = ma.Nested(ProductorSchema)
+
+class UserSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = User
+
+user_schema = UserSchema()
+usuarios_schema = UserSchema(many=True)
 
 funcion_schema = FuncionSchema()
 funciones_schema = FuncionSchema(many=True)

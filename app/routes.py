@@ -4,6 +4,7 @@ from app.schemas import (
     funcion_schema,funciones_schema,
     grupo_schema, grupos_schema,
     productor_schema, productores_schema,
+    user_schema, usuarios_schema
     )
 from flask import Response, jsonify, request, redirect, url_for
 from flask_security import login_user, logout_user, current_user, roles_required, login_required
@@ -12,6 +13,15 @@ from werkzeug.security import generate_password_hash, check_password_hash
 @app.route('/', methods=['GET'])
 def index():
     return jsonify({'Holamundo': 'Proyecto Backend para el TPO de Codo a Codo 4.0'})
+
+# ================================ Lista de usuarios
+
+@app.route('/usuarios', methods=['GET'])
+def get_usuarios():
+    if request.method == 'GET':
+        usuarios = User.query.all()
+        return jsonify({'usuarios': usuarios_schema.dump(usuarios)})
+
 
 # ======================================= FUNCIONES =======================================
 
