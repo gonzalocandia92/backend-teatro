@@ -23,9 +23,14 @@ class FuncionSchema(ma.SQLAlchemyAutoSchema):
     grupo = ma.Nested(GrupoSchema)
     productor = ma.Nested(ProductorSchema)
 
-class UserSchema(ma.SQLAlchemyAutoSchema):
+class UserSchema(ma.SQLAlchemySchema):
     class Meta:
         model = User
+
+    id = ma.auto_field()
+    email = ma.auto_field()
+    # Agrega otros campos según sea necesario
+
 
 user_schema = UserSchema()
 usuarios_schema = UserSchema(many=True)

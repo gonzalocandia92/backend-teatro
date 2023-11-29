@@ -18,10 +18,12 @@ def index():
 
 @app.route('/usuarios', methods=['GET'])
 def get_usuarios():
-    if request.method == 'GET':
-        usuarios = User.query.all()
-        return jsonify({'usuarios': usuarios_schema.dump(usuarios)})
-
+    try:
+        if request.method == 'GET':
+            usuarios = User.query.all()
+            return jsonify({'usuarios': usuarios_schema.dump(usuarios)})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # ======================================= FUNCIONES =======================================
 
