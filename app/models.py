@@ -48,12 +48,7 @@ class User(db.Model, UserMixin):
     active = db.Column(db.Boolean())
     fs_uniquifier = db.Column(db.String(255), unique=True)  
     roles = db.relationship('Role', secondary='user_roles', backref='user_roles')
-    
-    def __init__(self, id):
-        self.id = id
-        self.name = "user" + str(id)
-        self.password = self.name + "_secret"
-        
+            
     def __repr__(self):
         return "%d/%s/%s" % (self.id, self.name, self.password)
 
