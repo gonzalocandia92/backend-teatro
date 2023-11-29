@@ -16,6 +16,15 @@ class Funcion(db.Model):
     # Definiciones de relaciones
     grupo = db.relationship('Grupo', backref='funciones')
     productor = db.relationship('Productor', backref='funciones')
+    
+    def __init__(self,titulo,fecha,hora,imagen,grupo_id,productor_id):
+        self.titulo=titulo   
+        self.fecha=fecha
+        self.hora=hora
+        self.imagen=imagen
+        self.grupo_id=grupo_id
+        self.productor_id=productor_id
+        
 
 class Grupo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -38,7 +47,15 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(255))
     active = db.Column(db.Boolean())
     fs_uniquifier = db.Column(db.String(255), unique=True)  
-    roles = db.relationship('Role', secondary='user_roles')
+    roles = db.relationship('Role', secondary='user_roles', backref='user_roles')
+    
+    def __init__(self, id):
+        self.id = id
+        self.name = "user" + str(id)
+        self.password = self.name + "_secret"
+        
+    def __repr__(self):
+        return "%d/%s/%s" % (self.id, self.name, self.password)
 
 
 class UserRoles(db.Model):

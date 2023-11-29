@@ -1,3 +1,5 @@
+from flask_cors import cross_origin
+from flask_login import LoginManager
 from app.models import Funcion, Grupo, Productor, User, Role
 from app import app, db
 from app.schemas import (
@@ -6,7 +8,7 @@ from app.schemas import (
     productor_schema, productores_schema,
     user_schema, usuarios_schema
     )
-from flask import Response, jsonify, request, redirect, url_for
+from flask import Response, jsonify, make_response, render_template, request, redirect, session, url_for
 from flask_security import login_user, logout_user, current_user, roles_required, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -221,11 +223,11 @@ def register():
 
     login_user(user)  # Opcional: Inicia sesión automáticamente después del registro
 
-    response = Response(jsonify({'message': 'Registro exitoso'}), 201)
-    response.headers['Content-Type'] = 'application/json; charset=utf-8'
+    # Utiliza jsonify directamente sin crear otra instancia de Response
+    response = jsonify({'message': 'Registro exitoso'})
+    response.status_code = 201  # Esto establece el código de estado de la respuesta
 
     return response
-
 
 # Ruta de login
 @app.route('/login', methods=['POST'])
@@ -246,12 +248,22 @@ def login():
     else:
         return jsonify({'message': 'Credenciales incorrectas'}), 401
 
-# Ruta de logout
 @app.route('/logout', methods=['POST'])
-@login_required 
+@login_required
+@cross_origin(supports_credentials=True)
 def logout():
     if current_user.is_authenticated:
         logout_user()
         return jsonify({'message': 'Cierre de sesión exitoso'}), 200
     else:
         return jsonify({'message': 'No hay usuario autenticado'}), 401
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+# handle login failed
+@app.errorhandler(401)
+def page_not_found(e):
+    return Response('<p>Login failed</p>')
+

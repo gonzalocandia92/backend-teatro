@@ -1,11 +1,15 @@
 # app/__init__.py
 import os
+import secrets
 from flask import Flask
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from envs.var import DATABASE_URI
 from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMixin
+from flask_cors import CORS
+from flask_login import LoginManager
+
 
 # La variable DATABASE_URI contiene la URL de conexión a la base de datos MySQL.
 # El formato general es 'mysql://usuario:contraseña@localhost/nombre_de_la_base_de_datos'.
@@ -13,14 +17,24 @@ from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMix
 # DATABASE_URI = 'mysql://usuario:contraseña@localhost/nombre_de_la_base_de_datos'
 
 app = Flask(__name__)
+
+app.config['SECRET_KEY'] = secrets.token_urlsafe(32)
+
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True,
     'pool_recycle': 300,
 }
+# flask-login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
 
-app.config['SECRET_KEY'] = 'tu_clave_secreta_aleatoria'
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hora
+
+CORS(app, supports_credentials=True)
+
 
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
