@@ -159,6 +159,7 @@ def gestionar_productor(productor_id):
         return jsonify({'productor': productor_schema.dump(productor)})
 
 @app.route('/dashboard/productores', methods=['GET', 'POST'])
+@roles_required('administrador')
 def get_productores_admin():
     if request.method == 'GET':
         productores = Productor.query.all()
