@@ -1,5 +1,6 @@
 from flask_cors import cross_origin
 from flask_login import LoginManager
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from app.models import Funcion, Grupo, Productor, User, Role
 from app import app, db
 from app.schemas import (
@@ -198,7 +199,6 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 # =============================================== Login =================================
-
 # Ruta de registro
 @app.route('/register', methods=['POST'])
 def register():
@@ -215,20 +215,18 @@ def register():
     # Crea el nuevo usuario
     new_user = user_datastore.create_user(email=email, password=generate_password_hash(password))
     user_datastore.add_role_to_user(new_user, 'usuario')
+    user_datastore.add_role_to_user(new_user, 'administrador')  # Asigna el rol de administrador
     db.session.commit()
 
-    # Llama a la función get_user para obtener el usuario recién creado por su ID
-    user = user_datastore.get_user(new_user.id)
+    # Genera un token de acceso
+    access_token = create_access_token(identity=new_user.id)
+    login_user(user)
 
-    login_user(user)  # Opcional: Inicia sesión automáticamente después del registro
 
-    # Utiliza jsonify directamente sin crear otra instancia de Response
-    response = jsonify({'message': 'Registro exitoso'})
-    response.status_code = 201  # Esto establece el código de estado de la respuesta
+    # Retorna el token junto con el mensaje de registro exitoso
+    return jsonify({'message': 'Registro exitoso', 'access_token': access_token}), 201
 
-    return response
-
-# Ruta de login
+# Ruta de inicio de sesión
 @app.route('/login', methods=['POST'])
 def login():
     from app import user_datastore
@@ -240,13 +238,18 @@ def login():
     user = user_datastore.find_user(email=email)
 
     if user and check_password_hash(user.password, password):
-        # Llamada a la función get_user para obtener el usuario por su ID
-        user = user_datastore.get_user(user.id)
+        # Inicia sesión utilizando Flask-Login
         login_user(user)
-        return jsonify({'message': 'Inicio de sesión exitoso'}), 200
+
+        # Genera un token de acceso
+        access_token = create_access_token(identity=user.id)
+
+        # Retorna el token junto con el mensaje de inicio de sesión exitoso
+        return jsonify({'message': 'Inicio de sesión exitoso', 'access_token': access_token}), 200
     else:
         return jsonify({'message': 'Credenciales incorrectas'}), 401
-
+    
+# Ruta de logout
 @app.route('/logout', methods=['POST'])
 @login_required
 @cross_origin(supports_credentials=True)

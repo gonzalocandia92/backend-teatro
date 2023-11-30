@@ -9,6 +9,8 @@ from envs.var import DATABASE_URI
 from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMixin
 from flask_cors import CORS
 from flask_login import LoginManager
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -28,6 +30,11 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True,
     'pool_recycle': 300,
 }
+
+# Configuración de JWT
+app.config['JWT_SECRET_KEY'] = secrets.token_urlsafe(32)  # Reemplaza con tu propia clave secreta
+jwt = JWTManager(app)
+
 # flask-login
 login_manager = LoginManager()
 login_manager.init_app(app)
