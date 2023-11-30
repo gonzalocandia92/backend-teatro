@@ -9,6 +9,8 @@ from envs.var import DATABASE_URI
 from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMixin
 from flask_cors import CORS
 from flask_login import LoginManager
+from werkzeug.security import generate_password_hash, check_password_hash
+
 
 
 # La variable DATABASE_URI contiene la URL de conexión a la base de datos MySQL.
@@ -52,11 +54,15 @@ def create_default_roles():
 
 def create_default_user():
     admin_user = user_datastore.find_user(email='admin@example.com')
-    if not admin_user:
-        admin_user = user_datastore.create_user(email='admin@example.com', password='password')
+    if admin_user:
+        # Si el usuario existe, actualiza la contraseña
+        admin_user.password = generate_password_hash('new_password')
+    else:
+        # Si el usuario no existe, crea uno nuevo
+        admin_user = user_datastore.create_user(email='admin@admin.com', password=generate_password_hash('admin'))
         for role_name in ['administrador', 'usuario']:
             role = user_datastore.find_role(role_name)
-            user_datastore.add_role_to_user(admin_user, role)  
+            user_datastore.add_role_to_user(admin_user, role)
     db.session.commit()
 
 
