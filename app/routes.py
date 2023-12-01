@@ -293,13 +293,3 @@ def logout():
         return jsonify({'message': 'Cierre de sesión exitoso'}), 200
     else:
         return jsonify({'message': 'No hay usuario autenticado'}), 401
-
-@app.errorhandler(404)
-def page_not_found(e):
-    return render_template('404.html'), 404
-
-# handle login failed
-@app.errorhandler(401)
-def page_not_found(e):
-    return Response('<p>Login failed</p>')
-
