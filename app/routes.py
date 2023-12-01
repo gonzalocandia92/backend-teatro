@@ -197,10 +197,6 @@ def gestionar_productor_admin(productor_id):
         db.session.commit()
         return jsonify({'message': 'Productor eliminado'})
 
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True)
 
 # =============================================== Login =================================
 # Ruta de registro
