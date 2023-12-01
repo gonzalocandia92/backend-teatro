@@ -77,7 +77,7 @@ def create_admin_user():
     # Verifica si el usuario ya existe por dirección de correo electrónico
     existing_user = user_datastore.find_user(email=email)
     if existing_user:
-        user_datastore.add_role_to_user(admin_user, 'administrador')
+        user_datastore.add_role_to_user(existing_user, 'administrador')
         db.session.commit()
         print('El usuario administrador ya existe.')
         return
