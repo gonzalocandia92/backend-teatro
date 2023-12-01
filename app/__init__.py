@@ -36,7 +36,7 @@ app.config['JWT_SECRET_KEY'] = secrets.token_urlsafe(32)  # Reemplaza con tu pro
 jwt = JWTManager(app)
 
 # flask-login
-login_manager = LoginManager()
+login_manager = LoginManager(app)
 login_manager.init_app(app)
 login_manager.login_view = "login"
 

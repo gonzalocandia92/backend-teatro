@@ -176,6 +176,7 @@ def get_productores_admin():
         return jsonify({'message': 'Productor creado'}), 201
     
 @app.route('/dashboard/productores/<int:productor_id>', methods=['GET', 'PUT', 'DELETE'])
+@login_required
 @roles_required('administrador')
 def gestionar_productor_admin(productor_id):
     productor = Productor.query.get(productor_id)
