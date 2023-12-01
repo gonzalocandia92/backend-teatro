@@ -80,7 +80,7 @@ def mostrar_funciones(funcion_id):
         return jsonify({'funcion': funcion_schema.dump(funcion)})
     
 @app.route('/dashboard/funciones/crear', methods=['POST'])
-@roles_required('administrador')
+@admin_required
 def create_funciones():
     if request.method == 'POST':
         nueva_funcion = Funcion(
@@ -96,7 +96,7 @@ def create_funciones():
         return jsonify({'message': 'Función creada'}), 201
     
 @app.route('/dashboard/funciones/<int:funcion_id>', methods=['GET', 'PUT', 'DELETE'])
-@roles_required('administrador')
+@admin_required
 def modify_funcion(funcion_id):
     funcion = Funcion.query.get(funcion_id)
 
@@ -140,7 +140,7 @@ def gestionar_grupo(grupo_id):
         return jsonify({'grupo': grupo_schema.dump(grupo)})    
     
 @app.route('/dashboard/grupos', methods=['GET', 'POST'])
-@roles_required('administrador')
+@admin_required
 def get_grupos_admin():
     if request.method == 'POST':
         nuevo_grupo = Grupo(
@@ -152,7 +152,7 @@ def get_grupos_admin():
         return jsonify({'message': 'Grupo creado'}), 201
 
 @app.route('/dashboard/grupos/<int:grupo_id>', methods=['GET', 'PUT', 'DELETE'])
-@roles_required('administrador')
+@admin_required
 def gestionar_grupo_admin(grupo_id):
     grupo = Grupo.query.get(grupo_id)
 
@@ -207,8 +207,7 @@ def get_productores_admin():
         return jsonify({'message': 'Productor creado'}), 201
     
 @app.route('/dashboard/productores/<int:productor_id>', methods=['GET', 'PUT', 'DELETE'])
-@login_required
-@roles_required('administrador')
+@admin_required
 def gestionar_productor_admin(productor_id):
     productor = Productor.query.get(productor_id)
 
