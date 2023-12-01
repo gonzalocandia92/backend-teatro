@@ -245,8 +245,12 @@ def login():
         # Inicia sesión utilizando Flask-Login
         login_user(user)
 
-        # Genera un token de acceso
-        access_token = create_access_token(identity=user.id)
+        # Obtén los roles del usuario
+        user_roles = [role.name for role in user.roles]
+
+        # Genera un token de acceso con información adicional (roles)
+        access_token = create_access_token(identity=user.id, additional_claims={'roles': user_roles})
+
 
         # Retorna el token junto con el mensaje de inicio de sesión exitoso
         return jsonify({'message': 'Inicio de sesión exitoso', 'access_token': access_token}), 200

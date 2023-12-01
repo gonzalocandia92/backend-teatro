@@ -10,10 +10,7 @@ from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMix
 from flask_cors import CORS
 from flask_login import LoginManager
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-
 from werkzeug.security import generate_password_hash, check_password_hash
-
-
 
 # La variable DATABASE_URI contiene la URL de conexión a la base de datos MySQL.
 # El formato general es 'mysql://usuario:contraseña@localhost/nombre_de_la_base_de_datos'.
@@ -32,8 +29,7 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 }
 
 # Configuración de JWT
-app.config['JWT_SECRET_KEY'] = secrets.token_urlsafe(32)  # Reemplaza con tu propia clave secreta
-jwt = JWTManager(app)
+app.config['JWT_SECRET_KEY'] = 'ASDKNQWR234OGIV234NM!Q#SAK234DFNASDOFAS453DBN4F'  # Reemplaza con tu propia clave secreta
 
 # flask-login
 login_manager = LoginManager(app)
@@ -47,6 +43,7 @@ CORS(app, supports_credentials=True)
 
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
+
 
 
 def create_default_roles():
@@ -89,14 +86,17 @@ def create_admin_user():
     db.session.commit()
 
 from app import routes
-from app.models import User, Role        
-        
+from app.models import User, Role      
+  
 def get_user(user_id):
     return User.query.get(int(user_id))
-        
+
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 user_datastore.get_user = get_user 
 security = Security(app, user_datastore, user_model=User)
+jwt = JWTManager(app)
+        
+
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):
