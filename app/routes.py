@@ -1,5 +1,8 @@
 from flask_cors import cross_origin
 from flask_login import LoginManager
+from functools import wraps
+from flask import request, jsonify
+from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from app.models import Funcion, Grupo, Productor, User, Role
 from app import app, db
@@ -12,6 +15,34 @@ from app.schemas import (
 from flask import Response, jsonify, make_response, render_template, request, redirect, session, url_for
 from flask_security import login_user, logout_user, current_user, roles_required, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
+
+
+
+def admin_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        try:
+            # Verifica si el token está presente en la solicitud
+            verify_jwt_in_request()
+
+            # Obtiene la identidad del token (en este caso, el ID del usuario)
+            user_id = get_jwt_identity()
+
+            # Ejemplo de lógica (ajusta según tu implementación):
+            user = User.query.get(user_id)
+            user_roles = [role.name for role in user.roles]
+
+            # Verifica si el usuario tiene el rol de administrador
+            if 'administrador' in user_roles:
+                return fn(*args, **kwargs)
+            else:
+                return jsonify({'message': 'Acceso no autorizado'}), 403
+
+        except Exception as e:
+            return jsonify({'message': 'Error de autenticación'}), 401
+
+    return wrapper
+
 
 @app.route('/', methods=['GET'])
 def index():
@@ -161,7 +192,7 @@ def gestionar_productor(productor_id):
         return jsonify({'productor': productor_schema.dump(productor)})
 
 @app.route('/dashboard/productores', methods=['GET', 'POST'])
-@roles_required('administrador')
+@admin_required
 def get_productores_admin():
     if request.method == 'GET':
         productores = Productor.query.all()
