@@ -1,6 +1,6 @@
 from marshmallow import fields
 from app import ma
-from app.models import Grupo, Productor, Funcion, User
+from app.models import Grupo, Productor, Funcion, User, Role
 
 class GrupoSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -23,7 +23,13 @@ class FuncionSchema(ma.SQLAlchemyAutoSchema):
     grupo = ma.Nested(GrupoSchema)
     productor = ma.Nested(ProductorSchema)
 
+class RolSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Role
+        
 class UserSchema(ma.SQLAlchemySchema):
+    roles = fields.Nested(RolSchema, many=True)  # Asegúrate de tener un esquema para los roles
+
     class Meta:
         model = User
 

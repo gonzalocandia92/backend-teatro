@@ -24,7 +24,9 @@ def get_usuarios():
     try:
         if request.method == 'GET':
             usuarios = User.query.all()
-            return jsonify({'usuarios': usuarios_schema.dump(usuarios)})
+            # Serializa usuarios con roles usando Marshmallow
+            usuarios_serializados = usuarios_schema.dump(usuarios)
+            return jsonify({'usuarios': usuarios_serializados})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
