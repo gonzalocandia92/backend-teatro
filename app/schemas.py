@@ -10,7 +10,6 @@ class ProductorSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Productor
 
-# Esquema con Marshmallow para Funcion
 class FuncionSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Funcion
@@ -28,14 +27,13 @@ class RolSchema(ma.SQLAlchemyAutoSchema):
         model = Role
         
 class UserSchema(ma.SQLAlchemySchema):
-    roles = fields.Nested(RolSchema, many=True)  # Asegúrate de tener un esquema para los roles
+    roles = fields.Nested(RolSchema, many=True)  
 
     class Meta:
         model = User
 
     id = ma.auto_field()
     email = ma.auto_field()
-    # Agrega otros campos según sea necesario
 
 
 user_schema = UserSchema()

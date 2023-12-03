@@ -12,8 +12,6 @@ class Funcion(db.Model):
     imagen = db.Column(LONGTEXT)
     grupo_id = db.Column(db.Integer, db.ForeignKey('grupo.id'), nullable=False)
     productor_id = db.Column(db.Integer, db.ForeignKey('productor.id'), nullable=False)
-
-    # Definiciones de relaciones
     grupo = db.relationship('Grupo', backref='funciones')
     productor = db.relationship('Productor', backref='funciones')
     
