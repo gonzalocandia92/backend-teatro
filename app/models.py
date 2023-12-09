@@ -14,7 +14,7 @@ class Funcion(db.Model):
     productor_id = db.Column(db.Integer, db.ForeignKey('productor.id'), nullable=False)
     grupo = db.relationship('Grupo', backref='funciones')
     productor = db.relationship('Productor', backref='funciones')
-    activa = db.Column(db.Boolean, nullable=False, default=False)
+    activa = db.Column(db.Boolean())
     precio = db.Column(db.Float, nullable=False, default=0.0)
 
     
