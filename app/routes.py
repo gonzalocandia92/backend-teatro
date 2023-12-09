@@ -322,12 +322,20 @@ def register():
         data = request.get_json()
         email = data.get('email')
         password = data.get('password')
+        nombre = data.get('nombre')
+        apellido = data.get('apellido')
+        
         if not email or not password:
             return jsonify({'message': 'Correo electrónico y contraseña son obligatorios'}), 400
         existing_user = user_datastore.find_user(email=email)
         if existing_user:
             return jsonify({'message': 'El usuario ya existe'}), 400
-        new_user = user_datastore.create_user(email=email, password=generate_password_hash(password))
+        new_user = user_datastore.create_user(
+            email=email,
+            nombre=nombre,
+            apellido=apellido,
+            password=generate_password_hash(password)
+            )
         user_datastore.add_role_to_user(new_user, 'usuario')
         db.session.commit()
         user_roles = [role.name for role in new_user.roles]
