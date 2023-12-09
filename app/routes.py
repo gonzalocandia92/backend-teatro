@@ -9,7 +9,7 @@ from app.schemas import (
     funcion_schema,funciones_schema,
     grupo_schema, grupos_schema,
     productor_schema, productores_schema,
-    usuarios_schema
+    usuarios_schema, user_schema
     )
 from flask import jsonify, request
 from flask_security import login_user, logout_user, current_user, login_required
@@ -217,7 +217,95 @@ def gestionar_productor_admin(productor_id):
         db.session.commit()
         return jsonify({'message': 'Productor eliminado'})
 
+# =============================================== Usuarios =================================
+@app.route('/dashboard/usuarios', methods=['GET', 'POST'])
+@admin_required
+def get_usuarios_admin():
+    from app import user_datastore
 
+    if request.method == 'GET':
+        usuarios = User.query.all()
+        return jsonify({'usuarios': usuarios_schema.dump(usuarios)})
+
+    elif request.method == 'POST':
+        try:
+            data = request.get_json()
+            email = data.get('email')
+            nombre = data.get('nombre')
+            apellido = data.get('apellido')
+            password = data.get('password')
+
+            # Validación de datos de entrada
+            if not email or not password:
+                return jsonify({'message': 'Datos de usuario incompletos'}), 400
+
+            existing_user = user_datastore.find_user(email=email)
+            if existing_user:
+                return jsonify({'message': 'El usuario ya existe'}), 400
+
+            new_user = user_datastore.create_user(
+                email=email,
+                nombre=nombre,
+                apellido=apellido,
+                password=generate_password_hash(password)
+            )
+            user_datastore.add_role_to_user(new_user, 'usuario')
+            db.session.commit()
+            return jsonify({'message': 'Usuario creado'}), 201
+
+        except Exception as e:
+            return jsonify({'message': f'Error al crear usuario: {str(e)}'}), 500
+
+@app.route('/dashboard/usuarios/<int:usuario_id>', methods=['GET', 'PUT', 'DELETE'])
+@admin_required
+def gestionar_usuario(usuario_id):
+    from app import user_datastore
+
+    usuario = User.query.get(usuario_id)
+
+    if not usuario:
+        return jsonify({'message': 'Usuario no encontrado'}), 404
+
+    if request.method == 'GET':
+        return jsonify({'usuario': user_schema.dump(usuario)})
+
+    elif request.method == 'PUT':
+        try:
+            data = request.get_json()
+            usuario = User.query.get(usuario_id)
+
+            if not usuario:
+                return jsonify({'message': 'Usuario no encontrado'}), 404
+
+            # Actualizar los campos proporcionados en los datos JSON
+            for key, value in data.items():
+                if hasattr(usuario, key):
+                    setattr(usuario, key, value)
+
+            # Validación de datos de entrada
+            required_fields = ['nombre', 'apellido', 'email', 'password']
+            if not all(field in data for field in required_fields):
+                return jsonify({'message': 'Datos de actualización incompletos'}), 400
+
+            db.session.commit()
+            return jsonify({'message': 'Usuario actualizado'}), 200
+
+        except Exception as e:
+            return jsonify({'message': f'Error al actualizar usuario: {str(e)}'}), 500
+
+    elif request.method == 'DELETE':
+        try:
+            # Eliminar cualquier asignación de roles asociada con el usuario
+            user_datastore.remove_role_from_user(usuario, 'usuario')
+            user_datastore.remove_role_from_user(usuario, 'administrador')
+
+            db.session.delete(usuario)
+            db.session.commit()
+            return jsonify({'message': 'Usuario eliminado'}), 200
+
+        except Exception as e:
+            return jsonify({'message': f'Error al eliminar usuario: {str(e)}'}), 500
+    
 # =============================================== Sesiones =================================
 # Ruta de registro
 @app.route('/register', methods=['POST'])
