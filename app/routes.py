@@ -79,7 +79,7 @@ def create_funciones():
             hora=request.json['hora'],
             imagen=request.json['imagen'],
             precio=request.json['precio'],
-            activa=request.json['activa'],
+            activa=True,
             grupo_id=request.json['grupo_id'],
             productor_id=request.json['productor_id']
         )
