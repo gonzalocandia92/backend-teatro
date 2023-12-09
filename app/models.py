@@ -18,11 +18,13 @@ class Funcion(db.Model):
     precio = db.Column(db.Float, nullable=False, default=0.0)
 
     
-    def __init__(self,titulo,fecha,hora,imagen,grupo_id,productor_id):
+    def __init__(self,titulo,fecha,hora,imagen,precio,activa,grupo_id,productor_id):
         self.titulo=titulo   
         self.fecha=fecha
         self.hora=hora
         self.imagen=imagen
+        self.precio=precio
+        self.activa=activa
         self.grupo_id=grupo_id
         self.productor_id=productor_id
         
