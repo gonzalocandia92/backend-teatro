@@ -272,7 +272,6 @@ def gestionar_usuario(usuario_id):
 
     elif request.method == 'PUT':
         try:
-            data = request.get_json()
             usuario = User.query.get(usuario_id)
 
             if not usuario:
@@ -282,9 +281,6 @@ def gestionar_usuario(usuario_id):
             usuario.nombre = request.json['nombre']
             usuario.apellido = request.json['apellido']
             usuario.email = request.json['email']
-            usuario.password = generate_password_hash(request.json['password'])
-
-
             db.session.commit()
             
 
