@@ -1,6 +1,6 @@
 from marshmallow import fields
 from app import ma
-from app.models import Grupo, Productor, Funcion, User, Role
+from app.models import Grupo, Productor, Funcion, User, Role, Venta
 
 class GrupoSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -19,6 +19,8 @@ class FuncionSchema(ma.SQLAlchemyAutoSchema):
     fecha = ma.auto_field()
     hora = ma.auto_field()
     imagen = ma.auto_field()
+    activa = ma.auto_field()
+    precio = ma.auto_field()
     grupo = ma.Nested(GrupoSchema)
     productor = ma.Nested(ProductorSchema)
 
@@ -36,6 +38,27 @@ class UserSchema(ma.SQLAlchemySchema):
     email = ma.auto_field()
     nombre = ma.auto_field()
     apellido = ma.auto_field()
+    
+class VentaSchema(ma.SQLAlchemyAutoSchema):
+    funcion = fields.Nested(FuncionSchema, many=True)  
+    productor = fields.Nested(ProductorSchema, many=True)  
+    grupo = fields.Nested(GrupoSchema, many=True)  
+    usuario = fields.Nested(UserSchema, many=True)  
+
+    class Meta:
+        model = Venta
+        
+    id = ma.auto_field()
+    funcion_id = ma.auto_field()
+    productor_id = ma.auto_field()
+    grupo_id = ma.auto_field()
+    usuario_id = ma.auto_field()
+    fecha_venta = ma.auto_field()
+    hora_venta = ma.auto_field()
+    monto = ma.auto_field()
+
+venta_schema = VentaSchema()
+ventas_schema = VentaSchema(many=True)
 
 user_schema = UserSchema()
 usuarios_schema = UserSchema(many=True)

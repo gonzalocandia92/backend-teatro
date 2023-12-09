@@ -5,15 +5,18 @@ from flask_security import UserMixin, RoleMixin
 # Modelos para la base de datos
 
 class Funcion(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, index=True)
     titulo = db.Column(db.String(255), nullable=False)
-    fecha = db.Column(db.Date, nullable=False)
-    hora = db.Column(db.Time, nullable=False)
+    fecha = db.Column(db.Date, nullable=False, index=True)
+    hora = db.Column(db.Time, nullable=False, index=True)
     imagen = db.Column(LONGTEXT)
     grupo_id = db.Column(db.Integer, db.ForeignKey('grupo.id'), nullable=False)
     productor_id = db.Column(db.Integer, db.ForeignKey('productor.id'), nullable=False)
     grupo = db.relationship('Grupo', backref='funciones')
     productor = db.relationship('Productor', backref='funciones')
+    activa = db.Column(db.Boolean, nullable=False, default=False)
+    precio = db.Column(db.Float, nullable=False, default=0.0)
+
     
     def __init__(self,titulo,fecha,hora,imagen,grupo_id,productor_id):
         self.titulo=titulo   
@@ -58,3 +61,27 @@ class UserRoles(db.Model):
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
     role_id = db.Column(db.Integer(), db.ForeignKey('role.id', ondelete='CASCADE'))
 
+# Modelo de ventas, en caso de desarrollo posterior del módulo de estadísticas de ventas en dashboard
+class Venta(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    funcion_id = db.Column(db.Integer, db.ForeignKey('funcion.id'), nullable=False)
+    productor_id = db.Column(db.Integer, db.ForeignKey('productor.id'), nullable=False)
+    grupo_id = db.Column(db.Integer, db.ForeignKey('grupo.id'), nullable=False)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    fecha_venta = db.Column(db.Date, nullable=False)
+    hora_venta = db.Column(db.Time, nullable=False)
+    monto = db.Column(db.Float, nullable=False)
+
+    funcion = db.relationship('Funcion', backref='ventas')
+    productor = db.relationship('Productor', backref='ventas')
+    grupo = db.relationship('Grupo', backref='ventas')
+    usuario = db.relationship('User', backref='ventas')
+
+    def __init__(self, funcion_id, productor_id, grupo_id, usuario_id, fecha_venta, hora_venta, monto):
+        self.funcion_id = funcion_id
+        self.productor_id = productor_id
+        self.grupo_id = grupo_id
+        self.usuario_id = usuario_id
+        self.fecha_venta = fecha_venta
+        self.hora_venta = hora_venta
+        self.monto = monto

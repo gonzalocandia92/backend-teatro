@@ -1,15 +1,14 @@
 from flask_cors import cross_origin
 from functools import wraps
 from flask import request, jsonify
-from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
-from flask_jwt_extended import create_access_token, get_jwt_identity
-from app.models import Funcion, Grupo, Productor, User
+from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request, create_access_token, jwt_required
+from app.models import Funcion, Grupo, Productor, User, Venta
 from app import app, db
 from app.schemas import (
     funcion_schema,funciones_schema,
     grupo_schema, grupos_schema,
     productor_schema, productores_schema,
-    usuarios_schema, user_schema
+    usuarios_schema, user_schema, venta_schema, ventas_schema
     )
 from flask import jsonify, request
 from flask_security import login_user, logout_user, current_user, login_required
@@ -79,6 +78,8 @@ def create_funciones():
             fecha=request.json['fecha'],
             hora=request.json['hora'],
             imagen=request.json['imagen'],
+            precio=request.json['precio'],
+            activa=request.json['activa'],
             grupo_id=request.json['grupo_id'],
             productor_id=request.json['productor_id']
         )
@@ -98,14 +99,20 @@ def modify_funcion(funcion_id):
         return jsonify({'funcion': funcion_schema.dump(funcion)})
 
     elif request.method == 'PUT':
-        funcion.titulo = request.json['titulo']
-        funcion.fecha = request.json['fecha']
-        funcion.hora = request.json['hora']
-        funcion.imagen = request.json['imagen']
-        funcion.grupo_id = request.json['grupo_id']
-        funcion.productor_id = request.json['productor_id']
-        db.session.commit()
-        return jsonify({'message': 'Función actualizada'})
+        try:
+            funcion.titulo = request.json.get('titulo')
+            funcion.fecha = request.json.get('fecha')
+            funcion.hora = request.json.get('hora')
+            funcion.imagen = request.json.get('imagen')
+            funcion.precio = request.json.get('precio')
+            funcion.activa = request.json.get('activa')
+            funcion.grupo_id = request.json.get('grupo_id')
+            funcion.productor_id = request.json.get('productor_id')
+            db.session.commit()
+            return jsonify({'message': 'Función actualizada', 'funcion_id': funcion.id})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': str(e)}), 500
 
     elif request.method == 'DELETE':
         db.session.delete(funcion)
@@ -369,3 +376,68 @@ def logout():
         return jsonify({'message': 'Cierre de sesión exitoso'}), 200
     else:
         return jsonify({'message': 'No hay usuario autenticado'}), 401
+
+# ============================================ VENTAS ============================================
+# Ruta para usuarios logueados
+@app.route('/ventas', methods=['POST'])
+@jwt_required()
+def create_venta():
+    try:
+        # Obtener la identidad del usuario desde el token JWT
+        usuario_id = get_jwt_identity()
+
+        nueva_venta = Venta(
+            funcion_id=request.json['funcion_id'],
+            productor_id=request.json['productor_id'],
+            grupo_id=request.json['grupo_id'],
+            usuario_id=usuario_id,
+            fecha_venta=request.json['fecha_venta'],
+            hora_venta=request.json['hora_venta'],
+            monto=request.json['monto']
+        )
+        db.session.add(nueva_venta)
+        db.session.commit()
+        return jsonify({'message': 'Venta creada'}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+# Rutas para administradores desde el dashboard
+@app.route('/dashboard/ventas', methods=['GET'])
+@admin_required
+def get_usuarios_admin():
+    if request.method == 'GET':
+        ventas = Venta.query.all()
+        return jsonify({'ventas': usuarios_schema.dump(ventas)})
+    
+@app.route('/dashboard/ventas/<int:venta_id>', methods=['GET', 'PUT', 'DELETE'])
+@admin_required
+def manage_venta(venta_id):
+    venta = Venta.query.get(venta_id)
+    if not venta:
+        return jsonify({'message': 'Venta no encontrada'}), 404
+
+    if request.method == 'GET':
+        return jsonify({'venta': venta_schema.dump(venta)})
+
+    elif request.method == 'PUT':
+        try:
+            # Actualizar los campos necesarios
+            venta.funcion_id = request.json.get('funcion_id')
+            venta.productor_id = request.json.get('productor_id')
+            venta.grupo_id = request.json.get('grupo_id')
+            venta.usuario_id = request.json.get('usuario_id')
+            venta.fecha_venta = request.json.get('fecha_venta')
+            venta.hora_venta = request.json.get('hora_venta')
+            venta.monto = request.json.get('monto')
+
+            db.session.commit()
+            return jsonify({'message': 'Venta actualizada', 'venta_id': venta.id})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': str(e)}), 500
+
+    elif request.method == 'DELETE':
+        db.session.delete(venta)
+        db.session.commit()
+        return jsonify({'message': 'Venta eliminada'})
