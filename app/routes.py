@@ -69,7 +69,7 @@ def mostrar_funciones(funcion_id):
     if request.method == 'GET':
         return jsonify({'funcion': funcion_schema.dump(funcion)})
     
-@app.route('/dashboard/funciones/crear', methods=['POST'])
+@app.route('/dashboard/funciones/crear', methods=['GET', 'POST'])
 @admin_required
 def create_funciones():
     if request.method == 'POST':
