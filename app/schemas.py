@@ -34,7 +34,9 @@ class UserSchema(ma.SQLAlchemySchema):
 
     id = ma.auto_field()
     email = ma.auto_field()
-
+    nombre = ma.auto_field()
+    apellido = ma.auto_field()
+    username = ma.auto_field()
 
 user_schema = UserSchema()
 usuarios_schema = UserSchema(many=True)

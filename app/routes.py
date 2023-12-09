@@ -14,6 +14,7 @@ from app.schemas import (
 from flask import jsonify, request
 from flask_security import login_user, logout_user, current_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.exc import SQLAlchemyError
 
 
 
@@ -277,20 +278,30 @@ def gestionar_usuario(usuario_id):
             if not usuario:
                 return jsonify({'message': 'Usuario no encontrado'}), 404
 
-            # Actualizar los campos proporcionados en los datos JSON
-            for key, value in data.items():
-                if hasattr(usuario, key):
-                    setattr(usuario, key, value)
 
-            # Validación de datos de entrada
-            required_fields = ['nombre', 'apellido', 'email', 'password']
-            if not all(field in data for field in required_fields):
-                return jsonify({'message': 'Datos de actualización incompletos'}), 400
+            usuario.nombre = request.json['nombre']
+            usuario.apellido = request.json['apellido']
+            usuario.email = request.json['email']
+            usuario.password = generate_password_hash(request.json['password'])
 
+
+            db.session.commit()
+            
+
+
+            print('aaaaaaaaaaa')
             db.session.commit()
             return jsonify({'message': 'Usuario actualizado'}), 200
 
+        except SQLAlchemyError as e:
+            # Manejo de errores específicos de SQLAlchemy
+            db.session.rollback()  # Revierte los cambios en caso de error
+            print(str(e))
+            return jsonify({'message': f'Error de SQLAlchemy al actualizar usuario: {str(e)}'}), 500
+
         except Exception as e:
+            # Manejo de otros errores no especificados
+            print(str(e))
             return jsonify({'message': f'Error al actualizar usuario: {str(e)}'}), 500
 
     elif request.method == 'DELETE':
@@ -311,17 +322,21 @@ def gestionar_usuario(usuario_id):
 @app.route('/register', methods=['POST'])
 def register():
     from app import user_datastore
-    data = request.get_json()
-    email = data.get('email')
-    password = data.get('password')
-    existing_user = user_datastore.find_user(email=email)
-    if existing_user:
-        return jsonify({'message': 'El usuario ya existe'}), 400
-    new_user = user_datastore.create_user(email=email, password=generate_password_hash(password))
-    user_datastore.add_role_to_user(new_user, 'usuario')
-    db.session.commit()
-    access_token = create_access_token(identity=new_user.id)
-    return jsonify({'message': 'Registro exitoso', 'access_token': access_token}), 201
+    if request.method == 'POST':
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+        if not email or not password:
+            return jsonify({'message': 'Correo electrónico y contraseña son obligatorios'}), 400
+        existing_user = user_datastore.find_user(email=email)
+        if existing_user:
+            return jsonify({'message': 'El usuario ya existe'}), 400
+        new_user = user_datastore.create_user(email=email, password=generate_password_hash(password))
+        user_datastore.add_role_to_user(new_user, 'usuario')
+        db.session.commit()
+        user_roles = [role.name for role in new_user.roles]
+        access_token = create_access_token(identity=new_user.id, additional_claims={'roles': user_roles})
+        return jsonify({'message': 'Registro exitoso', 'access_token': access_token}), 201
 
 # Ruta de inicio de sesión
 @app.route('/login', methods=['POST'])
