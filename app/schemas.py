@@ -40,22 +40,14 @@ class UserSchema(ma.SQLAlchemySchema):
     apellido = ma.auto_field()
     
 class VentaSchema(ma.SQLAlchemyAutoSchema):
-    funcion = fields.Nested(FuncionSchema, many=True)  
-    productor = fields.Nested(ProductorSchema, many=True)  
-    grupo = fields.Nested(GrupoSchema, many=True)  
-    usuario = fields.Nested(UserSchema, many=True)  
+    funcion = fields.Nested(FuncionSchema)
+    productor = fields.Nested(ProductorSchema)
+    grupo = fields.Nested(GrupoSchema)
+    usuario = fields.Nested(UserSchema)
 
     class Meta:
         model = Venta
-        
-    id = ma.auto_field()
-    funcion_id = ma.auto_field()
-    productor_id = ma.auto_field()
-    grupo_id = ma.auto_field()
-    usuario_id = ma.auto_field()
-    fecha_venta = ma.auto_field()
-    hora_venta = ma.auto_field()
-    monto = ma.auto_field()
+        include_fk = True  # Incluye automáticamente las claves foráneas
 
 venta_schema = VentaSchema()
 ventas_schema = VentaSchema(many=True)
