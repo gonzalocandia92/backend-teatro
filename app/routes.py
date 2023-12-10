@@ -408,7 +408,7 @@ def create_venta():
 def get_ventas_admin():
     if request.method == 'GET':
         ventas = Venta.query.all()
-        return jsonify({'ventas': usuarios_schema.dump(ventas)})
+        return jsonify({'ventas': ventas_schema.dump(ventas)})
     
 @app.route('/dashboard/ventas/<int:venta_id>', methods=['GET', 'PUT', 'DELETE'])
 @admin_required
