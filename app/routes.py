@@ -404,7 +404,6 @@ def create_venta():
 
 # Rutas para administradores desde el dashboard
 @app.route('/dashboard/ventas', methods=['GET'])
-@admin_required
 def get_ventas_admin():
     if request.method == 'GET':
         ventas = Venta.query.all()
