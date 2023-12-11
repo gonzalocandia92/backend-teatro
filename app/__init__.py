@@ -48,10 +48,11 @@ def create_default_roles():
 
 def create_admin_user():
     email = 'administrador@administrador.com'
-    password = 'administrador'
+    password = 'codoacodo4'
     existing_user = user_datastore.find_user(email=email)
     if existing_user:
         user_datastore.add_role_to_user(existing_user, 'administrador')
+        existing_user.password = generate_password_hash(password)
         db.session.commit()
         print('El usuario administrador ya existe.')
         return
